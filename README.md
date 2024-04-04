@@ -3,9 +3,9 @@ This project can be used with the OpenWRT SDK to generate a package for ampr-rip
 Before installing the package, export the following variables (examples only!):
 
 ```
-amprhost='44.44.44.1'
-amprmask='255.255.255.0'
-amprnet='44.44.44.0/28'
+export amprhost=44.44.44.1
+export amprmask=255.255.255.0
+export amprnet=44.44.44.0/24
 ```
 
 Then:

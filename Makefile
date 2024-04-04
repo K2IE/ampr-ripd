@@ -41,6 +41,12 @@ endef
 define Package/$(PKG_NAME)/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
+   echo "Installing with values:
+
+  amprhost=$$amprhost
+  amprmask=$$amprmask
+  amprnet=$$amprnet
+"
    echo "Installing routing rules..."
    r=`uci add network rule`
    uci set network.$$r.dest='44.0.0.0/9'
