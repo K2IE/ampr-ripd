@@ -5,7 +5,7 @@ Before installing the package, export the following variables (examples only!):
 ```
 amprhost='44.44.44.1'
 amprmask='255.255.255.0'
-amprnet='44.44.44.0'
+amprnet='44.44.44.0/28'
 ```
 
 Then:
