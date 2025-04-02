@@ -33,7 +33,6 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/sbin
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_CONF) ./files/$(PKG_NAME).conf $(1)/etc/$(PKG_NAME).conf
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/$(PKG_NAME)-init $(1)/etc/init.d/$(PKG_NAME)
 endef
@@ -47,6 +46,11 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
   amprmask=$$amprmask
   amprnet=$$amprnet
 "
+   echo "Creating /etc/ampr-ripd.conf..."
+   echo "# Set to your AMPR allocation
+# eg. 44.128.0.32/255.255.255.240
+TUNNET=$$amprnet/$$amprmask" > /etc/ampr-ripd.conf
+   
    echo "Installing routing rules..."
    r=`uci add network rule`
    uci set network.$$r.dest='44.0.0.0/9'
@@ -89,24 +93,50 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
    uci set firewall.$$z.src='amprlan'
    uci set firewall.$$z.dest='amprwan'
    uci commit firewall
+
+   echo "Installing firewall rules..."
+   f=`uci add firewall rule`
+   uci set firewall.$$f.name='ipip'
+   uci set firewall.$$f.proto='ipencap'
+   uci set firewall.$$f.src='wan'
+   uci set firewall.$$f.target='ACCEPT'
+   uci set firewall.$$f.family='ipv4'
+   uci set firewall.$$f.icmp_type='echo-request'
+   f=`uci add firewall rule`
+   uci set firewall.$$f.name='Net 44 ICMP Echo Request'
+   uci set firewall.$$f.proto='icmp'
+   uci set firewall.$$f.src='amprwan'
+   uci set firewall.$$f.dest='amprlan'
+   uci set firewall.$$f.target='ACCEPT'
+   uci set firewall.$$f.family='ipv4'
+   uci set firewall.$$f.icmp_type='echo-request'
+   f=`uci add firewall rule`
+   uci set firewall.$$f.name='Net 44 Router ICMP'
+   uci set firewall.$$f.proto='icmp'
+   uci set firewall.$$f.src='amprwan'
+   uci set firewall.$$f.target='ACCEPT'
+   uci set firewall.$$f.family='ipv4'
+   uci set firewall.$$f.icmp_type='echo-request'
+   uci commit firewall
 fi
 endef
 
 define Package/$(PKG_NAME)/postrm
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-   echo "Removing network interfaces..."
-   uci del network.amprwan
-   uci del network.amprlan
-   echo "Removing firewall zones..."
+   echo "Removing firewall rules..."
    for i in `seq 25 -1 0`; do
-      if [ `uci -q get firewall.@forwarding[$$i]` ]; then
-         name=`uci get firewall.@forwarding[$$i].src`
-         if [ "$$name" = "amprlan" ] || [ "$$name" = "amprwan" ]; then
-            uci del firewall.@forwarding[$$i]
+      if [ `uci -q get firewall.@rule[$$i]` ]; then
+         name=`uci get firewall.@rule[$$i].name`
+         if [ "$$name" = "Net 44 ICMP Echo Request" ] \
+            || [ "$$name" = "Net 44 Router ICMP" ]    \
+            || [ "$$name" = "ipip" ]; then
+            uci del firewall.@rule[$$i]
          fi
       fi
    done
+   uci commit firewall
+
    echo "Removing network rules..."
    for i in `seq 25 -1 0`; do
       if [ `uci -q get network.@rule[$$i]` ]; then
@@ -117,6 +147,17 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
       fi
    done
    uci commit network
+
+   echo "Removing firewall zone forwarding rules..."
+   for i in `seq 25 -1 0`; do
+      if [ `uci -q get firewall.@forwarding[$$i]` ]; then
+         name=`uci get firewall.@forwarding[$$i].src`
+         if [ "$$name" = "amprlan" ] || [ "$$name" = "amprwan" ]; then
+            uci del firewall.@forwarding[$$i]
+         fi
+      fi
+   done
+
    echo "Removing firewall zones..."
    for i in `seq 25 -1 0`; do
       if [ `uci -q get firewall.@zone[$$i]` ]; then
@@ -127,6 +168,12 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
       fi
    done
    uci commit firewall
+
+   echo "Removing network interfaces..."
+   uci del network.amprwan
+   uci del network.amprlan
+   uci commit network
+
 fi
 endef
 
