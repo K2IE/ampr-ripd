@@ -18,16 +18,6 @@ opkg update
 opkg install ampr-ripd_2.4-1_{your architecture}.ipk
 ```
 
-Other things to do include:
-```
-Edit /etc/ampr-ripd.conf.
-Use the Luci GUI to validate the Firewall - Zone Settings.
-Add a Firewall - Traffic rule to allow IPIP to "this device".
-Add a firewall - Traffic rule to allow Net44 ICMP Echo Request from amprwan
- to amprlan as well as from amprwan to "this device".
-/etc/init.d/ampr-ripd restart
-```
-
 After a short while:
 ```
 ip route show table 44
