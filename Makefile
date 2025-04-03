@@ -125,7 +125,7 @@ define Package/$(PKG_NAME)/postrm
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
    echo "Removing firewall rules..."
-   for i in `seq 25 -1 0`; do
+   for i in `seq 99 -1 0`; do
       if [ `uci -q get firewall.@rule[$$i]` ]; then
          name=`uci get firewall.@rule[$$i].name`
          if [ "$$name" = "Net 44 ICMP Echo Request" ] \
@@ -138,7 +138,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
    uci commit firewall
 
    echo "Removing network rules..."
-   for i in `seq 25 -1 0`; do
+   for i in `seq 99 -1 0`; do
       if [ `uci -q get network.@rule[$$i]` ]; then
          lookup=`uci get network.@rule[$$i].lookup`
          if [ "$$lookup" = "44" ]; then
@@ -149,7 +149,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
    uci commit network
 
    echo "Removing firewall zone forwarding rules..."
-   for i in `seq 25 -1 0`; do
+   for i in `seq 99 -1 0`; do
       if [ `uci -q get firewall.@forwarding[$$i]` ]; then
          name=`uci get firewall.@forwarding[$$i].src`
          if [ "$$name" = "amprlan" ] || [ "$$name" = "amprwan" ]; then
@@ -159,7 +159,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
    done
 
    echo "Removing firewall zones..."
-   for i in `seq 25 -1 0`; do
+   for i in `seq 99 -1 0`; do
       if [ `uci -q get firewall.@zone[$$i]` ]; then
          name=`uci get firewall.@zone[$$i].name`
          if [ "$$name" = "amprlan" ] || [ "$$name" = "amprwan" ]; then

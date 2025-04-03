@@ -8,7 +8,7 @@ Before installing the package, export the following variables (examples only!):
 ```
 export amprhost=44.44.44.1
 export amprmask=255.255.255.0
-export amprnet=44.44.44.0/24
+export amprnet=44.44.44.0
 ```
 
 Then:
